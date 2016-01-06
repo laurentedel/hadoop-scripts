@@ -11,7 +11,7 @@ BEGIN {
 /^.*/ {
         if ($3 < THRESHOLD) {
                 if (trigger) {
-                        printf("echo \"merge_region '%s','%s'\" | hbase shell\n", f1, $1)
+                        printf("merge_region '%s','%s'\n", f1, $1)
                         trigger = 0
                         next
                 } else trigger = 0

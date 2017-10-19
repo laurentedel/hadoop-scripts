@@ -17,3 +17,9 @@ The idea is to launch the script with `./hbase_region_repartition.sh TABLE_NAME 
 This is used for backuping all Hadoop configurations with Ambari API.
 You can for example use this script before an Ambari migration so that you'll be able to compare a before/after configs with `diff` to see if some parameters has been adjusted/added/removed.
 Just modify the parameters in the script and launch it without parameters.
+
+## blueprint.py
+
+You can easily export a cluster structure with the Ambari API (blueprints).
+When you want to submit a blueprint for creating a new cluster, you got to provide a host mapping json file which fits the blueprint hostgroups definition.
+The goal of this script is to recreate the actual host mapping json file, if you want to recreate the same cluster on the same hosts for some reason.

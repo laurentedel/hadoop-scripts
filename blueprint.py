@@ -137,14 +137,14 @@ if sec == "KERBEROS":
     KDC_ADMIN = raw_input("Enter KDC admin principal [" + principal + "]: ") or principal
     while True:
         KDC_PASSWD = getpass.getpass("Enter KDC admin password [admin]: ") or "admin"
-        KDC_PASSWD2 = getpass.getpass("Enter KDC admin password again: ") or "admin"
+        KDC_PASSWD2 = getpass.getpass("Enter KDC admin password again [admin]: ") or "admin"
         if KDC_PASSWD != KDC_PASSWD2:
             print("[ERROR] passwords doesn't match")
         else:
             break
     while True:
         DEFAULT_PASSWD = getpass.getpass("Enter default password for all required passwords which are not specified in the blueprint or cluster creation template configurations [hadoop]: ") or "hadoop"
-        DEFAULT_PASSWD2 = getpass.getpass("Enter default password again: ") or "hadoop"
+        DEFAULT_PASSWD2 = getpass.getpass("Enter default password again [hadoop]: ") or "hadoop"
         if DEFAULT_PASSWD != DEFAULT_PASSWD2:
             print("[ERROR] passwords doesn't match")
         else:

@@ -15,6 +15,7 @@
 import requests
 import json
 import datetime
+import getpass
 
 AMBARI_DOMAIN='127.0.0.1'
 AMBARI_PORT='8080'
@@ -121,15 +122,33 @@ if sec == "KERBEROS":
     url_kerberos=CLUSTER_API+"/configurations/service_config_versions?service_name=KERBEROS&is_current=true"
     k=requests.get(url_kerberos, auth=(AMBARI_USER_ID, AMBARI_USER_PW))
     json_data_k=json.loads(k.text)
-    security = json_data_k["items"][0]['configurations'][0]['properties']["kdc_type"]
+
+    # json_data_k["items"][0]['configurations'] contains kerberos-env and krb5-conf, without order garantee
+    # so finding the index of kerberos-env first to have the array element we need
+    #TODO exception if idx is not found!
+    idx = next(index for (index, d) in enumerate(json_data_k["items"][0]['configurations']) if d["type"] == "kerberos-env")
+    
+    security = json_data_k["items"][0]['configurations'][idx]['properties']["kdc_type"]
     if security == 'mit-kdc':
-        principal = json_data_k["items"][0]['user'] + "/admin@" + json_data_k["items"][0]['configurations'][0]['properties']['realm']
+        principal = json_data_k["items"][0]['user'] + "/admin@" + json_data_k["items"][0]['configurations'][idx]['properties']['realm']
     if security == 'active-directory':
-        principal = json_data_k["items"][0]['user'] + "@" + json_data_k["items"][0]['configurations'][0]['properties']['realm']
+        principal = json_data_k["items"][0]['user'] + "@" + json_data_k["items"][0]['configurations'][idx]['properties']['realm']
 
     KDC_ADMIN = raw_input("Enter KDC admin principal [" + principal + "]: ") or principal
-    KDC_PASSWD = raw_input("Enter KDC admin password [admin]: ") or "admin"
-    DEFAULT_PASSWD = raw_input("Enter default password [hadoop]: ") or "hadoop"
+    while True:
+        KDC_PASSWD = getpass.getpass("Enter KDC admin password [admin]: ") or "admin"
+        KDC_PASSWD2 = getpass.getpass("Enter KDC admin password again: ") or "admin"
+        if KDC_PASSWD != KDC_PASSWD2:
+            print("[ERROR] passwords doesn't match")
+        else:
+            break
+    while True:
+        DEFAULT_PASSWD = getpass.getpass("Enter default password for all required passwords which are not specified in the blueprint or cluster creation template configurations [hadoop]: ") or "hadoop"
+        DEFAULT_PASSWD2 = getpass.getpass("Enter default password again: ") or "hadoop"
+        if DEFAULT_PASSWD != DEFAULT_PASSWD2:
+            print("[ERROR] passwords doesn't match")
+        else:
+            break
     DEFAULT_BLUEPRINT_NAME="blueprint_" + datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     BLUEPRINT_NAME = raw_input("Enter Blueprint name [" + DEFAULT_BLUEPRINT_NAME + "]: ") or DEFAULT_BLUEPRINT_NAME
 

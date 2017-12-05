@@ -5,7 +5,19 @@ if [ $# -eq 0 ]
     exit 2
 fi
 
-TABLE=$1
+THE_TABLE=$1
+sep=':'
+case $THE_TABLE in
+  (*"$sep"*)
+    NAMESPACE=${THE_TABLE%%"$sep"*}
+    TABLE=${THE_TABLE#*"$sep"}
+    ;;
+  (*)
+    NAMESPACE="default"
+    TABLE=${THE_TABLE}
+    ;;
+esac
+
 THRESHOLD_MERGE=${2:-5}
 MAX_REGIONS_TO_MERGE=${3:-25}
 kinit -kt /etc/security/keytabs/hbase.headless.keytab hbase
@@ -13,7 +25,7 @@ kinit -kt /etc/security/keytabs/hbase.headless.keytab hbase
 # get target region size defined in table desc
 # if it's not, then exit
 echo "get region size"
-REGION_SIZE=$(echo "describe '$TABLE'" | hbase shell | grep $TABLE | grep -v describe | sed -e "s/.*{MAX_FILESIZE => '\([^']*\)'.*/\1/")
+REGION_SIZE=$(echo "describe '$THE_TABLE'" | hbase shell | grep $TABLE | grep -v describe | grep -v Table | sed -e "s/.*{MAX_FILESIZE => '\([^']*\)'.*/\1/")
 re='^[0-9]+$'
 if ! [[ $REGION_SIZE =~ $re ]] ; then
    echo "Error: region size is not a number" >&2; exit 1
@@ -23,12 +35,12 @@ rm -f /tmp/file*
 
 # get regions sizes
 echo "get regions sizes"
-hdfs dfs -du /apps/hbase/data/data/default/$TABLE | awk -F"/" ' { t = $1; $1 = $NF; $2 = t; print $NF"\t"$2;} ' > /tmp/file1
+hdfs dfs -du /apps/hbase/data/data/$NAMESPACE/$TABLE | awk -F"/" ' { t = $1; $1 = $NF; $2 = t; print $NF"\t"$2;} ' > /tmp/file1
 
 # get adjacent regions from HBase
 # get rid of "OFFLINE => true" messages occuring when regions are splitting
 echo "get adjacent regions"
-REGIONS=$(echo "scan 'hbase:meta',{COLUMNS => 'info:regioninfo', FILTER=>\"PrefixFilter('$TABLE')\"}" | hbase shell | grep "$TABLE" | grep -v "^scan");
+REGIONS=$(echo "scan 'hbase:meta',{COLUMNS => 'info:regioninfo', FILTER=>\"PrefixFilter('$THE_TABLE')\"}" | hbase shell | grep "$THE_TABLE," | grep -v "^scan");
 echo "$REGIONS" | grep -v OFFLINE | sed -e 's/.*{ENCODED => \([^,]*\).*/\1/' > /tmp/file2
 
 # Use awk to put the region from file2 as an extra column in front of file1.

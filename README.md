@@ -1,5 +1,14 @@
 # hadoop-scripts
 
+## lr.rb
+
+This Ruby script is aimed to be used in hbase shell. Just write that file in your current working directory and execute it with 
+`hbase shell lr.rb`
+
+You'll then have a new *list_regions(table)* function which give you SERVERNAME, REGIONNAME, STARTKEY, ENDKEY, SIZE(MB), OCCUPANCY(%), REQUESTS
+The occupancy is computed over the specific region size of the table or the default parameter.
+
+
 ## hbase_region_repartition.sh
 
 This script was defined to merge tiny regions in HBase : when dealing with a high throughput writing environment, regions can easily multiply even if you sized regions accordingly.
